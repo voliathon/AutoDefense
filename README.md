@@ -8,25 +8,25 @@
 * **Self-Cast Safety:** Ignores your own casting to prevent conflicts with GearSwap's standard midcast logic.
 
 ## Installation
-1.  Create a folder named `auto_phalanx` inside your Windower `addons` directory:
-    `.../Windower4/addons/auto_phalanx/`
-2.  Place `auto_phalanx.lua` into this folder.
+1.  Create a folder named `AutoPhalanx` inside your Windower `addons` directory:
+    `.../Windower4/addons/AutoPhalanx/`
+2.  Place `AutoPhalanx.lua` into this folder.
 
 ## Configuration
-Open `auto_phalanx.lua` in a text editor (like Notepad++ or VS Code). Look for the **CONFIGURATION** section at the top:
+Open `AutoPhalanx.lua` in a text editor (like Notepad++ or VS Code). Look for the **CONFIGURATION** section at the top:
 
 ```lua
-local phalanx_command = 'gs equip sets.phalanx'
+local phalanx_command = 'gs equip sets.Phalanx'
 ```
 
-* **If you use GearSwap:** Change `'gs equip sets.phalanx'` to match the specific set name in your Lua file (e.g., `sets.midcast.Phalanx` or `sets.engaged.Phalanx`).
+* **If you use GearSwap:** Change `'gs equip sets.Phalanx'` to match the specific set name in your Lua file (e.g., `sets.midcast.Phalanx` or `sets.engaged.Phalanx`).
 * **If you use in-game macros:** Change it to an input command, such as:
     `local phalanx_command = 'input /equipset 10'`
 
 ## Usage
 Load the addon in-game:
 ```text
-//lua l auto_phalanx
+//lua l AutoPhalanx
 ```
 
 ### Testing
@@ -37,4 +37,5 @@ Load the addon in-game:
 ## Requirements
 * Windower 4
 * `packets` library (Standard with Windower)
+
 * `resources` library (Standard with Windower)
