@@ -1,11 +1,20 @@
 --[[
     Copyright (c) 2025 Voliathon
     All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice,
+       this list of conditions and the following disclaimer.
+    2. Redistributions in binary form must reproduce the above copyright notice,
+       this list of conditions and the following disclaimer in the documentation
+       and/or other materials provided with the distribution.
 ]]
 
 _addon.name = 'AutoDefense'
 _addon.author = 'Voliathon'
-_addon.version = '2.0.0 PacketLogic'
+_addon.version = '1.0.0'
 _addon.commands = {'ad', 'autodefense'}
 
 local res = require('resources')
@@ -25,7 +34,7 @@ local ids = {
     ACCESSIO  = 218,
     PHALANX_1 = 106,
     PHALANX_2 = 107,
-    CURSNA    = 20, -- The "Mystery ID" you discovered for Cursna
+    CURSNA    = 20, -- The "Mystery ID" discovered via packet analysis
     DOOM      = 15
 }
 
@@ -90,7 +99,6 @@ windower.register_event('action', function(act)
         local player = windower.ffxi.get_player()
 
         -- 1. DETECT ACCESSION (Category 6)
-        -- JAs usually show up correctly in the main param
         if act.category == 6 and act.param == ids.ACCESSIO then
             log('Accession active for Actor ' .. actor_id)
             accession_users[actor_id] = os.time() + 60
@@ -106,20 +114,18 @@ windower.register_event('action', function(act)
             local should_swap_cursna = false
             local is_accession = (accession_users[actor_id] and os.time() < accession_users[actor_id])
 
-            -- Iterate through targets (in case of AoE)
+            -- Iterate through targets
             for i, target in pairs(act.targets) do
                 local action = target.actions[1]
                 
                 if action then
-                    -- THE FIX: We look at the Sub-Param!
+                    -- THE FIX: Look at the Sub-Param
                     local sub_param = action.param 
 
                     -- LOGIC: PHALANX
                     if sub_param == ids.PHALANX_1 or sub_param == ids.PHALANX_2 then
-                        -- Direct hit
                         if target.id == player.id then 
                             should_swap_phalanx = true
-                        -- AoE hit
                         elseif is_accession and get_distance(target.id) < 10 then
                             should_swap_phalanx = true
                             log('AoE Phalanx proximity detected.')
@@ -128,10 +134,8 @@ windower.register_event('action', function(act)
                     -- LOGIC: CURSNA
                     elseif sub_param == ids.CURSNA then
                         if has_doom() then
-                            -- Direct hit
                             if target.id == player.id then 
                                 should_swap_cursna = true
-                            -- AoE hit
                             elseif is_accession and get_distance(target.id) < 10 then
                                 should_swap_cursna = true
                                 log('AoE Cursna proximity detected.')
