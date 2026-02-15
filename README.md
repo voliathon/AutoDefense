@@ -5,7 +5,7 @@
 ## Features
 
 ### 🛡️ Auto Phalanx
-* **Smart Detection:** Automatically equips `sets.Phalanx` when **Phalanx** or **Phalanx II** is cast on you.
+* **Smart Detection:** Automatically equips `sets.PhalanxReceived` when **Phalanx** or **Phalanx II** is cast on you.
 * **AoE Logic:** Intelligent detection for **Accession + Phalanx**. The addon calculates the distance between you and the spell's target. If you are within range (10 yalms) to receive the buff, it swaps your gear.
 * **Packet Precision:** Uses advanced sub-parameter detection to distinguish between Phalanx I and II, ensuring reliable triggers even if the server sends generic animation IDs.
 
@@ -31,11 +31,11 @@
 Open `auto_defense.lua` in a text editor. Look for the configuration section at the top:
 
 ```lua
-local phalanx_cmd = 'gs equip sets.Phalanx'
+local phalanx_cmd = 'gs equip sets.PhalanxRceived'
 local cursna_cmd  = 'gs equip sets.CursnaReceived'
 ```
 
-* **Note on Case Sensitivity:** Ensure `sets.Phalanx` and `sets.CursnaReceived` match the exact capitalization of the sets in your GearSwap file.
+* **Note on Case Sensitivity:** Ensure `sets.PhalanxReceived` and `sets.CursnaReceived` match the exact capitalization of the sets in your GearSwap file.
 
 ---
 
@@ -47,7 +47,7 @@ For the **Auto-Reset** feature to work (returning you to your Tank/Idle set afte
 Ensure these sets exist in your `get_sets()` function:
 
 ```lua
-sets.Phalanx = {
+sets.PhalanxReceived = {
     -- Your Phalanx received gear (Taeon, Herculean, etc.)
 }
 
@@ -87,7 +87,7 @@ Load the addon in-game:
 
 ### Testing
 1.  **Join a Party:** The addon will not trigger if you are Solo.
-2.  **Phalanx Test:** Have a party member cast Phalanx on you. Your gear should swap to `sets.Phalanx`.
+2.  **Phalanx Test:** Have a party member cast Phalanx on you. Your gear should swap to `sets.PhalanxReceived`.
 3.  **Cursna Test:**
     * **Normal:** Have someone cast Cursna on you while you are healthy. **Nothing should happen.**
     * **Doomed:** Get Doomed (e.g., from a spell or ability). Have someone cast Cursna. Your gear should swap to `sets.CursnaReceived`.
@@ -104,3 +104,4 @@ Redistribution and use in source and binary forms, with or without modification,
 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
 
 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
