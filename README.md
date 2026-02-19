@@ -11,7 +11,7 @@
 
 ### 💚 Auto Regen (Rune Fencer Exclusive)
 * **Smart Detection:** Automatically equips `sets.RegenReceived` when **Regen I, II, III, IV, or V** is cast on you.
-* **RUN Only:** Because received-Regen potency gear is highly specific (e.g., Erilaz Earring +1), the Regen swap logic will **only** trigger if your current main job is Rune Fencer. It will safely ignore Regen casts on all other jobs.
+* **RUN Only:** Because Regen Received gear is highly specific and limited (e.g., Erilaz Earring +1 and Morgelai), the Regen swap logic will **only** trigger if your current main job is Rune Fencer. It will safely ignore Regen casts on all other jobs.
 * **AoE Logic:** Fully supports **Accession + Regen** using the same intelligent 10-yalm distance detection.
 
 ### 💀 Auto Cursna
@@ -41,3 +41,4 @@ Open `AutoDefense.lua` in a text editor. Look for the configuration section at t
 local phalanx_cmd = 'gs equip sets.PhalanxReceived'
 local cursna_cmd  = 'gs equip sets.CursnaReceived'
 local regen_cmd   = 'gs equip sets.RegenReceived'
+
