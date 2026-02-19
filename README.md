@@ -11,7 +11,7 @@
 
 ### 💚 Auto Regen (Rune Fencer Exclusive)
 * **Smart Detection:** Automatically equips `sets.RegenReceived` when **Regen I, II, III, IV, or V** is cast on you.
-* **RUN Only:** Because received-Regen potency gear is highly specific (e.g., Erilaz Earring +1), the Regen swap logic will **only** trigger if your current main job is Rune Fencer. It will safely ignore Regen casts on all other jobs.
+* **RUN Only:** Because received-Regen potency gear is highly specific and limited (e.g., Erilaz Earring +1, Morgelai), the Regen swap logic will **only** trigger if your current main job is Rune Fencer. It will safely ignore Regen casts on all other jobs.
 * **AoE Logic:** Fully supports **Accession + Regen** using the same intelligent 10-yalm distance detection.
 
 ### 💀 Auto Cursna
@@ -115,5 +115,6 @@ All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
 
 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
