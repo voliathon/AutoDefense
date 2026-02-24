@@ -14,7 +14,7 @@
 
 _addon.name = 'AutoDefense'
 _addon.author = 'Voliathon'
-_addon.version = '1.1.0'
+_addon.version = '1.1.1'
 _addon.commands = {'ad', 'autodefense'}
 
 local res = require('resources')
@@ -51,7 +51,7 @@ local reset_timestamp = 0
 -- HELPER FUNCTIONS
 -- ============================================================================
 local function log(msg)
-    if debug_mode then windower.add_to_chat(207, '[AD-Debug] ' .. msg) end
+    if debug_mode then windower.add_to_chat(207, '[AutoDefense-Debug] ' .. msg) end
 end
 
 local function has_doom()
@@ -74,10 +74,10 @@ end
 -- ============================================================================
 local function try_reset_gear()
     if os.time() >= reset_timestamp then
-        log('Resetting gear.')
+        log('[AutoDefense-Debug] Resetting gear.')
         windower.send_command(return_cmd)
     else
-        log('Reset delayed (Window extended).')
+        log('[AutoDefense-Debug] Reset delayed (Window extended).')
     end
 end
 
@@ -106,7 +106,7 @@ windower.register_event('action', function(act)
 
         -- 1. DETECT ACCESSION (Category 6)
         if act.category == 6 and act.param == ids.ACCESSIO then
-            log('Accession active for Actor ' .. actor_id)
+            log('[AutoDefense-Debug] Accession active for Actor ' .. actor_id)
             accession_users[actor_id] = os.time() + 60
             return
         end
@@ -130,7 +130,7 @@ windower.register_event('action', function(act)
 
 					-- >>> ADD THIS DEBUG BLOCK <<<
                     if debug_mode and target.id == player.id then
-                        windower.add_to_chat(207, '[AD-Debug] Spell Landed on YOU! Sub-Param ID is: ' .. tostring(sub_param))
+                        windower.add_to_chat(207, '[AutoDefense-Debug] Spell Landed on YOU! Sub-Param ID is: ' .. tostring(sub_param))
                     end
                     -- >>> END DEBUG BLOCK <<<
 
@@ -140,7 +140,7 @@ windower.register_event('action', function(act)
                             should_swap_phalanx = true
                         elseif is_accession and get_distance(target.id) < 10 then
                             should_swap_phalanx = true
-                            log('AoE Phalanx proximity detected.')
+                            log('[AutoDefense-Debug] AoE Phalanx proximity detected.')
                         end
 
 					-- LOGIC: REGEN (Tiers I through V)
@@ -152,11 +152,11 @@ windower.register_event('action', function(act)
                                 should_swap_regen = true
                             elseif is_accession and get_distance(target.id) < 10 then
                                 should_swap_regen = true
-                                log('AoE Regen proximity detected.')
+                                log('[AutoDefense-Debug] AoE Regen proximity detected.')
                             end
                         else
                             if debug_mode then
-                                log('Regen ignored: Main job is not RUN.')
+                                log('[AutoDefense-Debug] Regen ignored: Main job is not RUN.')
                             end
                         end
 
@@ -167,7 +167,7 @@ windower.register_event('action', function(act)
                                 should_swap_cursna = true
                             elseif is_accession and get_distance(target.id) < 10 then
                                 should_swap_cursna = true
-                                log('AoE Cursna proximity detected.')
+                                log('[AutoDefense-Debug] AoE Cursna proximity detected.')
                             end
                         end
                     end
