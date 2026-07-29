@@ -14,7 +14,7 @@
 
 _addon.name = 'AutoDefense'
 _addon.author = 'Voliathon'
-_addon.version = '1.1.1'
+_addon.version = '1.2.1'
 _addon.commands = {'ad', 'autodefense'}
 
 local res = require('resources')
@@ -22,11 +22,12 @@ local res = require('resources')
 -- ============================================================================
 -- CONFIGURATION
 -- ============================================================================
-local phalanx_cmd = 'gs equip sets.PhalanxReceived'
-local cursna_cmd  = 'gs equip sets.CursnaReceived'
-local regen_cmd   = 'gs equip sets.RegenReceived' -- New command for Regen
-local return_cmd  = 'gs c update' 
-local debug_mode  = false 
+local phalanx_cmd  = 'gs equip sets.PhalanxReceived'
+local cursna_cmd   = 'gs equip sets.CursnaReceived'
+local regen_cmd    = 'gs equip sets.RegenReceived'
+local proshell_cmd = 'gs equip sets.ProShellReceived'
+local return_cmd   = 'gs c update' 
+local debug_mode   = false 
 
 -- ============================================================================
 -- STATE TRACKING
@@ -69,21 +70,37 @@ local function get_distance(target_id)
     return 999
 end
 
+local function is_party_member(actor_id)
+    local party = windower.ffxi.get_party()
+    if not party then return false end
+    
+    -- Check player's immediate party (p0 through p5)
+    for i = 0, 5 do
+        local member = party['p' .. i]
+        if member and member.mob and member.mob.id == actor_id then
+            return true
+        end
+    end
+    return false
+end
+
 -- ============================================================================
 -- GEAR LOGIC
 -- ============================================================================
 local function try_reset_gear()
     if os.time() >= reset_timestamp then
-        log('[AutoDefense-Debug] Resetting gear.')
+        --windower.add_to_chat(207, '[AutoDefense-Debug] Resetting gear.')
         windower.send_command(return_cmd)
     else
-        log('[AutoDefense-Debug] Reset delayed (Window extended).')
+        windower.add_to_chat(207, '[AutoDefense-Debug] Reset delayed (Window extended).')
     end
 end
 
 local function equip_and_schedule(command, spell_name)
     reset_timestamp = os.time() + 4
-    windower.add_to_chat(207, '[AutoDefense] Incoming '..spell_name..'! Equipping set.')
+	if debug_mode then
+		windower.add_to_chat(207, '[AutoDefense] Incoming '..spell_name..'! Equipping set.')
+	end
     windower.send_command(command)
     coroutine.schedule(try_reset_gear, 4)
 end
@@ -94,7 +111,7 @@ end
 windower.register_event('action', function(act)
     
     -- Category 6 = Job Ability (Accession)
-    -- Category 8 = Spell Casting (Phalanx/Cursna/Regen)
+    -- Category 8 = Spell Casting (Magic Cast Start)
     if act.category == 6 or act.category == 8 then
         
         -- Optimization: Party Check
@@ -116,47 +133,66 @@ windower.register_event('action', function(act)
             -- Ignore self-cast
             if actor_id == player.id then return end
 
+            local in_party = is_party_member(actor_id)
+            local is_accession = (accession_users[actor_id] and os.time() < accession_users[actor_id])
+
             local should_swap_phalanx = false
             local should_swap_cursna = false
             local should_swap_regen = false
-            local is_accession = (accession_users[actor_id] and os.time() < accession_users[actor_id])
+            local should_swap_proshell = false
 
-            -- Iterate through targets
+            -- Iterate through the primary targets
             for i, target in pairs(act.targets) do
                 local action = target.actions[1]
                 
                 if action then
                     local sub_param = action.param 
-
-					-- >>> ADD THIS DEBUG BLOCK <<<
-                    if debug_mode and target.id == player.id then
-                        windower.add_to_chat(207, '[AutoDefense-Debug] Spell Landed on YOU! Sub-Param ID is: ' .. tostring(sub_param))
+                    
+                    -- Look up the spell name using Windower's resource library
+                    local spell_name = ''
+                    if res.spells[sub_param] then
+                        spell_name = res.spells[sub_param].en
                     end
-                    -- >>> END DEBUG BLOCK <<<
 
-                    -- LOGIC: PHALANX
-                    if sub_param == ids.PHALANX_1 or sub_param == ids.PHALANX_2 then
-                        if target.id == player.id then 
-                            should_swap_phalanx = true
-                        elseif is_accession and get_distance(target.id) < 10 then
-                            should_swap_phalanx = true
-                            log('[AutoDefense-Debug] AoE Phalanx proximity detected.')
+                    -- Debug: Prints all spells cast by party members so you can verify the ID
+                    if debug_mode and in_party then
+                        windower.add_to_chat(207, '[AutoDefense-Debug] Spell Cast: ' .. tostring(spell_name) .. ' (ID: ' .. tostring(sub_param) .. ')')
+                    end
+
+                    -- LOGIC: PROTECT / SHELL
+                    if string.find(spell_name, 'Protect') or string.find(spell_name, 'Shell') then
+                        local is_aoe_proshell = string.find(spell_name, 'Protectra') or string.find(spell_name, 'Shellra')
+                        
+                        if target.id == player.id then
+                            should_swap_proshell = true
+                        elseif (is_aoe_proshell or is_accession) and in_party and get_distance(target.id) < 10 then
+                            should_swap_proshell = true
+                            if debug_mode then 
+                                windower.add_to_chat(207, '[AutoDefense-Debug] AoE Protect/Shell proximity detected.') 
+                            end
                         end
 
-					-- LOGIC: REGEN (Tiers I through V)
+                    -- LOGIC: PHALANX
+                    elseif sub_param == ids.PHALANX_1 or sub_param == ids.PHALANX_2 then
+                        if target.id == player.id then 
+                            should_swap_phalanx = true
+                        elseif is_accession and in_party and get_distance(target.id) < 10 then
+                            should_swap_phalanx = true
+                            if debug_mode then 
+                                windower.add_to_chat(207, '[AutoDefense-Debug] AoE Phalanx proximity detected.') 
+                            end
+                        end
+
+                    -- LOGIC: REGEN (Tiers I through V)
                     elseif sub_param == ids.REGEN_1 or sub_param == ids.REGEN_2 or sub_param == ids.REGEN_3 or sub_param == ids.REGEN_4 or sub_param == ids.REGEN_5 then
-                        
-                        -- NEW: Only trigger Regen swaps if the main job is Rune Fencer
                         if player.main_job == 'RUN' then
                             if target.id == player.id then
                                 should_swap_regen = true
-                            elseif is_accession and get_distance(target.id) < 10 then
+                            elseif is_accession and in_party and get_distance(target.id) < 10 then
                                 should_swap_regen = true
-                                log('[AutoDefense-Debug] AoE Regen proximity detected.')
-                            end
-                        else
-                            if debug_mode then
-                                log('[AutoDefense-Debug] Regen ignored: Main job is not RUN.')
+                                if debug_mode then 
+                                    windower.add_to_chat(207, '[AutoDefense-Debug] AoE Regen proximity detected.') 
+                                end
                             end
                         end
 
@@ -165,22 +201,26 @@ windower.register_event('action', function(act)
                         if has_doom() then
                             if target.id == player.id then 
                                 should_swap_cursna = true
-                            elseif is_accession and get_distance(target.id) < 10 then
+                            elseif is_accession and in_party and get_distance(target.id) < 10 then
                                 should_swap_cursna = true
-                                log('[AutoDefense-Debug] AoE Cursna proximity detected.')
+                                if debug_mode then 
+                                    windower.add_to_chat(207, '[AutoDefense-Debug] AoE Cursna proximity detected.') 
+                                end
                             end
                         end
                     end
                 end
             end
 
-            -- EXECUTE SWAPS (Priority: Survival > Mitigation > Recovery)
+            -- EXECUTE SWAPS (Priority: Survival > Mitigation > Recovery > Buffs)
             if should_swap_cursna then
                 equip_and_schedule(cursna_cmd, "Cursna")
             elseif should_swap_phalanx then
                 equip_and_schedule(phalanx_cmd, "Phalanx")
             elseif should_swap_regen then
                 equip_and_schedule(regen_cmd, "Regen")
+            elseif should_swap_proshell then
+                equip_and_schedule(proshell_cmd, "Protect/Shell")
             end
         end
     end

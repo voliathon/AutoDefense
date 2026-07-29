@@ -1,18 +1,23 @@
 # AutoDefense
 
-**AutoDefense** (v1.1.1) is a consolidated Windower 4 addon for Final Fantasy XI that manages your defensive gear swaps automatically. It currently handles **Phalanx**, **Cursna**, and **Regen** by inspecting incoming packets to detect spells cast on you from other party members.
+**AutoDefense** (v1.2.1) is a consolidated Windower 4 addon for Final Fantasy XI that manages your defensive gear swaps automatically. It currently handles **Phalanx**, **Cursna**, **Regen**, and **Protect/Shell** by inspecting incoming packets to detect spells cast on you from other party members.
 
 ## Features
 
+### 🛡️ Auto Protect & Shell
+* **Smart Detection:** Automatically equips `sets.ProShellReceived` when **Protect**, **Shell**, **Protectra**, or **Shellra** is cast on you.
+* **Natural AoE & Accession Logic:** Intelligently detects natural AoE (-ra spells) as well as **Accession + Protect/Shell**, ensuring you are within range (10 yalms) to receive the buff before swapping.
+* **Party Verification:** Explicitly checks that the caster is in your immediate party, preventing false triggers from nearby players outside your group.
+
 ### 🛡️ Auto Phalanx
 * **Smart Detection:** Automatically equips `sets.PhalanxReceived` when **Phalanx** or **Phalanx II** is cast on you.
-* **AoE Logic:** Intelligent detection for **Accession + Phalanx**. The addon calculates the distance between you and the spell's target. If you are within range (10 yalms) to receive the buff, it swaps your gear.
+* **AoE Logic:** Intelligent detection for **Accession + Phalanx**. The addon calculates the distance between you and the spell's target and verifies party membership.
 * **Packet Precision:** Uses advanced sub-parameter detection to distinguish between Phalanx I and II, ensuring reliable triggers even if the server sends generic animation IDs.
 
 ### 💚 Auto Regen (Rune Fencer Exclusive)
 * **Smart Detection:** Automatically equips `sets.RegenReceived` when **Regen I, II, III, IV, or V** is cast on you.
 * **RUN Only:** Because received-Regen potency gear is highly specific (e.g., Erilaz Earring +1), the Regen swap logic will **only** trigger if your current main job is Rune Fencer. It will safely ignore Regen casts on all other jobs.
-* **AoE Logic:** Fully supports **Accession + Regen** using the same intelligent 10-yalm distance detection.
+* **AoE Logic:** Fully supports **Accession + Regen** using the same intelligent 10-yalm distance detection and party checks.
 
 ### 💀 Auto Cursna
 * **Doom Safety Check:** Swaps to `sets.CursnaReceived` **ONLY** if you are currently **Doomed**.
@@ -21,7 +26,7 @@
 * **Anti-Spam:** Intelligent timer handling prevents your gear from resetting mid-cast if multiple healers are spamming Cursna on you simultaneously.
 
 ### ⚡ Shared Features
-* **Priority Execution:** Always prioritizes survival over mitigation or recovery. If multiple spells land simultaneously, the swap priority is: **Cursna > Phalanx > Regen**.
+* **Priority Execution:** Always prioritizes survival over mitigation or recovery. If multiple spells land simultaneously, the swap priority is: **Cursna > Phalanx > Regen > Protect/Shell**.
 * **Party Requirement:** To save resources, the logic **only** runs when you are in a party. If you are Solo, the addon stays dormant.
 * **Auto-Reset:** Automatically sends a command to your GearSwap to reset your gear 4 seconds after the last spell is detected.
 * **Self-Cast Safety:** Ignores your own casting to prevent conflicts with GearSwap's standard midcast logic.
@@ -37,18 +42,19 @@
 Open `AutoDefense.lua` in a text editor. Look for the configuration section at the top:
 
 ```lua
-local phalanx_cmd = 'gs equip sets.PhalanxReceived'
-local cursna_cmd  = 'gs equip sets.CursnaReceived'
-local regen_cmd   = 'gs equip sets.RegenReceived'
+local phalanx_cmd  = 'gs equip sets.PhalanxReceived'
+local cursna_cmd   = 'gs equip sets.CursnaReceived'
+local regen_cmd    = 'gs equip sets.RegenReceived'
+local proshell_cmd = 'gs equip sets.ProShellReceived'
 ```
 
-* **Note on Case Sensitivity:** Ensure `sets.PhalanxReceived`, `sets.CursnaReceived`, and `sets.RegenReceived` match the exact capitalization of the sets in your GearSwap file.
+* **Note on Case Sensitivity:** Ensure `sets.PhalanxReceived`, `sets.CursnaReceived`, `sets.RegenReceived`, and `sets.ProShellReceived` match the exact capitalization of the sets in your GearSwap file.
 
 ---
 
 ## ⚠️ GearSwap Integration (Required) ⚠️
 
-For the **Auto-Reset** feature to work (returning you to your Tank/Idle set after the spell lands), you **MUST** add a specific command handler to your GearSwap file (e.g., `run.lua`).
+For the **Auto-Reset** feature to work (returning you to your Tank/Idle set after the spell lands), you **MUST** add a specific command handler to your GearSwap file (e.g., `run.lua` or `war.lua`).
 
 ### 1. Define Your Sets
 Ensure these sets exist in your `get_sets()` function:
@@ -69,6 +75,10 @@ sets.RegenReceived = {
     right_ear="Erilaz Earring +1",
     -- Any other received Regen gear
 }
+
+sets.ProShellReceived = {
+    left_ring="Sheltered Ring"
+}
 ```
 
 ### 2. Update `self_command`
@@ -81,7 +91,7 @@ function self_command(command)
     -- ADD THIS BLOCK:
     elseif command == 'update' then
         equip_current() -- Or whatever function resets your gear
-		send_command('@input /echo <----- [AutoDefense] Update Triggered ----->')
+		-- send_command('@input /echo <----- [AutoDefense] Update Triggered ----->')
     end
 end
 ```
@@ -100,8 +110,9 @@ Load the addon in-game:
 ### Testing
 1.  **Join a Party:** The addon will not trigger if you are Solo.
 2.  **Phalanx Test:** Have a party member cast Phalanx on you. Your gear should swap to `sets.PhalanxReceived`.
-3.  **Regen Test:** Ensure you are on Rune Fencer (RUN). Have someone cast Regen on you. Your gear should swap to `sets.RegenReceived`. (If you are on any other job, nothing should happen).
-4.  **Cursna Test:**
+3.  **Protect/Shell Test:** Have a party member cast Protect, Shell, Protectra, or Shellra. Your gear should swap to `sets.ProShellReceived`.
+4.  **Regen Test:** Ensure you are on Rune Fencer (RUN). Have someone cast Regen on you. Your gear should swap to `sets.RegenReceived`. (If you are on any other job, nothing should happen).
+5.  **Cursna Test:**
     * **Normal:** Have someone cast Cursna on you while you are healthy. **Nothing should happen.**
     * **Doomed:** Get Doomed (e.g., from a spell or ability). Have someone cast Cursna. Your gear should swap to `sets.CursnaReceived`.
 
