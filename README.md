@@ -2,6 +2,8 @@
 
 **AutoDefense** (v1.2.1) is a consolidated Windower 4 addon for Final Fantasy XI that manages your defensive gear swaps automatically. It currently handles **Phalanx**, **Cursna**, **Regen**, and **Protect/Shell** by inspecting incoming packets to detect spells cast on you from other party members.
 
+If you are interested in trying an IPC solution I also recommend giving https://github.com/RahvinCode/Herald a try which was created by Rahvin.
+
 ## Features
 
 ### 🛡️ Auto Protect & Shell
